@@ -10,10 +10,11 @@ import { Starfield } from "./scenes/Starfield";
 import { BlackHole } from "./scenes/BlackHole";
 import { Bubbles } from "./scenes/Bubbles";
 import { Crazy } from "./scenes/Crazy";
+import { EvenMoreCrazy } from "./scenes/EvenMoreCrazy";
 
 interface Props {
   analyser?: Tone.Analyser | null;
-  scene: "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles" | "crazy";
+  scene: "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles" | "crazy" | "evenmorecrazy";
   quality: "low" | "med" | "high";
 }
 
@@ -78,6 +79,9 @@ export const VisualizerCanvas = ({ analyser, scene, quality }: Props) => {
         {scene === "blackhole" && <BlackHole bands={bands} quality={quality} motion={motion} />}
         {scene === "bubbles" && <Bubbles bands={bands} quality={quality} motion={motion} />}
         {scene === "crazy" && <Crazy bands={bands} quality={quality} motion={motion} />}
+        {scene === "evenmorecrazy" && (
+          <EvenMoreCrazy bands={bands} quality={quality} motion={motion} />
+        )}
       </Canvas>
     </div>
   );

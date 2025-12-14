@@ -4,7 +4,14 @@ import { Slider } from "../components/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../components/select";
 
 const scenes: {
-  id: "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles" | "crazy";
+  id:
+    | "tunnel"
+    | "grid"
+    | "orbits"
+    | "blackhole"
+    | "bubbles"
+    | "crazy"
+    | "evenmorecrazy";
   title: string;
   detail: string;
 }[] = [
@@ -14,6 +21,11 @@ const scenes: {
   { id: "blackhole", title: "Black Hole", detail: "Particle spiral with glowing accretion swirl." },
   { id: "bubbles", title: "Interactive Bubbles", detail: "Grab and fling glowing bubbles with the beat." },
   { id: "crazy", title: "Crazy", detail: "Neon reactor core, kaleidoscope rings, shards & sparks." },
+  {
+    id: "evenmorecrazy",
+    title: "Even More Crazy",
+    detail: "Fractal rave portal with tunnel, mandala, ribbons, and acid confetti.",
+  },
 ];
 
 export const VisualizerTab = () => {
