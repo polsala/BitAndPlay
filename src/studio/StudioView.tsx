@@ -271,6 +271,7 @@ export const StudioView = () => {
   const transposePattern = useAppStore((state) => state.transposePattern);
   const quantizePattern = useAppStore((state) => state.quantizePattern);
   const resetDrumPattern = useAppStore((state) => state.resetDrumPattern);
+  const stopPreviewPlayback = useAppStore((state) => state.stopPreviewPlayback);
   const addTrack = useAppStore((state) => state.addTrack);
   const removeTrack = useAppStore((state) => state.removeTrack);
 
@@ -384,7 +385,10 @@ export const StudioView = () => {
             <Button
               size="sm"
               variant="default"
-              onClick={() => (playing ? pause() : play())}
+              onClick={() => {
+                stopPreviewPlayback?.();
+                playing ? pause() : play();
+              }}
               className="gap-1"
             >
               {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}

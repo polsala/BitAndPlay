@@ -76,6 +76,8 @@ interface StoreState {
   play: () => Promise<void>;
   pause: () => void;
   stop: () => void;
+  stopPreviewPlayback?: () => void;
+  setStopPreviewPlayback: (fn?: () => void) => void;
   regenerate: (seed?: number) => Promise<void>;
   variation: () => Promise<void>;
   updateParams: (changes: Partial<GeneratorParams>, autorender?: boolean) => Promise<void>;
@@ -158,6 +160,7 @@ export const useAppStore = create<StoreState>()(
     zoom: 1,
   },
   export: { fastChunks: [], exporting: false },
+  stopPreviewPlayback: undefined,
   setVisualizerScene: (scene: VisualizerScene) => set({ visualizerScene: scene }),
   setVisualizerQuality: (visualizerQuality: "low" | "med" | "high") =>
     set({ visualizerQuality }),
@@ -208,6 +211,7 @@ export const useAppStore = create<StoreState>()(
     stopTransport();
     set({ playing: false });
   },
+  setStopPreviewPlayback: (fn?: () => void) => set({ stopPreviewPlayback: fn }),
   regenerate: async (seed?: number) => {
     const params = { ...get().params, seed: seed ?? Math.floor(Math.random() * 999999) };
     const song = generateSong(params);

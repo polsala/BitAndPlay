@@ -34,12 +34,15 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
   const setApplyNextBar = useAppStore((state) => state.setApplyNextBar);
   const exportWav = useAppStore((state) => state.exportWav);
   const pauseTransport = useAppStore((state) => state.pause);
+  const setStopPreviewPlayback = useAppStore((state) => state.setStopPreviewPlayback);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [previewState, setPreviewState] = useState<"idle" | "loading" | "ready" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    setStopPreviewPlayback(() => handleStopPreview);
     return () => {
+      setStopPreviewPlayback(undefined);
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -47,7 +50,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
         URL.revokeObjectURL(previewUrl);
       }
     };
-  }, [previewUrl]);
+  }, [previewUrl, setStopPreviewPlayback]);
 
   const handleRenderPreview = async () => {
     if (previewState === "loading") return;
@@ -55,6 +58,9 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
     try {
       if (isPlaying) {
         pauseTransport();
+      }
+      if (audioRef.current && previewState === "playing") {
+        audioRef.current.pause();
       }
       const blob = await exportWav(48000, true);
       if (!blob) {
@@ -79,6 +85,14 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
     }
   };
 
+  const handleStopPreview = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setPreviewState(previewUrl ? "ready" : "idle");
+  };
+
   const handleTogglePreview = async () => {
     const audio = audioRef.current;
     if (!audio || !previewUrl) {
@@ -89,8 +103,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
       pauseTransport();
     }
     if (previewState === "playing") {
-      audio.pause();
-      setPreviewState("ready");
+      handleStopPreview();
     } else {
       try {
         await audio.play();
@@ -105,7 +118,14 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
     <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-black/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 text-sm">
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={onToggle} variant="default">
+          <Button
+            size="sm"
+            onClick={() => {
+              handleStopPreview();
+              onToggle();
+            }}
+            variant="default"
+          >
             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
           <Button size="sm" variant="ghost" onClick={onStop}>
