@@ -22,7 +22,7 @@ import { renderSongOffline, type OfflinePhase } from "@/audio/render/offline";
 import { projectFromSong } from "@/studio/projectDefaults";
 import { createDeterministicId } from "@/utils/id";
 
-export type VisualizerScene = "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles";
+export type VisualizerScene = "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles" | "crazy";
 export type UIMode = "playground" | "studio";
 
 interface ExportState {
