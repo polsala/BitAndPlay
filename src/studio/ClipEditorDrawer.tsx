@@ -1,6 +1,7 @@
-import { Minus, Music, Piano, Plus, Sparkles, Square, Wand2 } from "lucide-react";
+import { Minus, Music, Piano, Plus, Sparkles, Square, Wand2, X } from "lucide-react";
 import type { Clip, Pattern, Project, ProjectTrack } from "@/types/project";
 import { Button } from "@/ui/components/button";
+import { useAppStore } from "@/store/useAppStore";
 
 interface Props {
   project: Project;
@@ -32,6 +33,7 @@ export const ClipEditorDrawer = ({
   onTranspose,
   onResetDrums,
 }: Props) => {
+  const selectClip = useAppStore((state) => state.selectClip);
   const visible = clip && pattern && track;
   if (!visible || !clip || !pattern || !track) {
     return (
@@ -61,7 +63,7 @@ export const ClipEditorDrawer = ({
           <Music className="h-4 w-4" />
           Piano roll · {tonal.lengthSteps / tonal.stepsPerBar} bars
         </div>
-        <div className="overflow-x-auto rounded-lg border border-border/60 bg-black/40 p-2">
+        <div className="overflow-x-auto rounded-lg border border-border/60 bg-black/40 p-2 scroll-smoothbars">
           <div className="min-w-full space-y-1">
             {pitches.map((pitch) => (
               <div key={pitch} className="flex items-center gap-2">
@@ -114,7 +116,7 @@ export const ClipEditorDrawer = ({
           <Square className="h-4 w-4" />
           Step grid
         </div>
-        <div className="overflow-x-auto rounded-lg border border-border/60 bg-black/40 p-2">
+        <div className="overflow-x-auto rounded-lg border border-border/60 bg-black/40 p-2 scroll-smoothbars">
           <div className="min-w-full space-y-1">
             {lanes.map((lane) => (
               <div key={lane} className="flex items-center gap-2">
@@ -184,6 +186,9 @@ export const ClipEditorDrawer = ({
               </Button>
             </>
           )}
+          <Button size="sm" variant="ghost" onClick={() => selectClip(undefined)} title="Close editor">
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       {pattern.kind === "tonal" ? renderTonal() : renderDrums()}
