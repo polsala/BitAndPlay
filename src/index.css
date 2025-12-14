@@ -48,3 +48,26 @@ body {
 .focus-ring {
   @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
 }
+
+.scroll-smoothbars {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+}
+
+.scroll-smoothbars::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-smoothbars::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scroll-smoothbars::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+
+.scroll-smoothbars::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

@@ -408,7 +408,7 @@ export const StudioView = () => {
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 shrink-0 border-r border-border/70 bg-black/40">
+        <div className="w-72 shrink-0 overflow-y-auto overflow-x-hidden border-r border-border/70 bg-black/40 scroll-smoothbars">
           <div className="space-y-2 border-b border-border/70 px-3 py-3">
             <div className="text-xs font-semibold uppercase text-muted-foreground">Add track</div>
             <Input
@@ -447,8 +447,8 @@ export const StudioView = () => {
               key={track.id}
               className="flex h-20 items-center justify-between border-b border-border/60 px-3"
             >
-              <div>
-                <div className="text-sm font-semibold">{track.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{track.name}</div>
                 <div className="text-[11px] uppercase text-muted-foreground">{track.type}</div>
               </div>
               <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ export const StudioView = () => {
             </div>
           ))}
         </div>
-        <div className="relative flex-1 min-w-0 overflow-x-auto overflow-y-hidden pb-3">
+        <div className="relative flex-1 min-w-0 overflow-x-auto overflow-y-auto pb-3 scroll-smoothbars">
           <div className="relative" style={{ width: totalSteps * stepWidth }}>
             <TimelineRuler bars={project.lengthBars} stepWidth={stepWidth} />
             <div
