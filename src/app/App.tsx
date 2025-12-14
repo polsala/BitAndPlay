@@ -10,18 +10,15 @@ import { Button } from "@/ui/components/button";
 
 export const AppShell = () => {
   const [analyser, setAnalyser] = useState<ReturnType<typeof getAnalyser>>();
-  const { song, ui, visualizerScene, visualizerQuality, play, pause, stop, playing, prepareAudio } =
-    useAppStore((state) => ({
-      song: state.song,
-      ui: state.ui,
-      visualizerScene: state.visualizerScene,
-      visualizerQuality: state.visualizerQuality,
-      play: state.play,
-      pause: state.pause,
-      stop: state.stop,
-      playing: state.playing,
-      prepareAudio: state.prepareAudio,
-    }));
+  const song = useAppStore((state) => state.song);
+  const ui = useAppStore((state) => state.ui);
+  const visualizerScene = useAppStore((state) => state.visualizerScene);
+  const visualizerQuality = useAppStore((state) => state.visualizerQuality);
+  const play = useAppStore((state) => state.play);
+  const pause = useAppStore((state) => state.pause);
+  const stop = useAppStore((state) => state.stop);
+  const playing = useAppStore((state) => state.playing);
+  const prepareAudio = useAppStore((state) => state.prepareAudio);
 
   useEffect(() => {
     if (ui.overlay === "ready") {

@@ -9,15 +9,11 @@ export const ExportTab = () => {
   const [sampleRate, setSampleRate] = useState<44100 | 48000>(44100);
   const [normalize, setNormalize] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
-  const { exportState, startFastExport, stopFastExport, exportWav, buildShareLink } = useAppStore(
-    (state) => ({
-      exportState: state.export,
-      startFastExport: state.startFastExport,
-      stopFastExport: state.stopFastExport,
-      exportWav: state.exportWav,
-      buildShareLink: state.buildShareLink,
-    }),
-  );
+  const exportState = useAppStore((state) => state.export);
+  const startFastExport = useAppStore((state) => state.startFastExport);
+  const stopFastExport = useAppStore((state) => state.stopFastExport);
+  const exportWav = useAppStore((state) => state.exportWav);
+  const buildShareLink = useAppStore((state) => state.buildShareLink);
 
   const downloadBlob = (blob: Blob | null, filename: string) => {
     if (!blob) return;

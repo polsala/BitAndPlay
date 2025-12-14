@@ -8,27 +8,15 @@ import { Switch } from "./components/switch";
 export const TopBar = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
-  const {
-    regenerate,
-    exportJson,
-    importJson,
-    buildShareLink,
-    ui,
-    setTab,
-    saveLocal,
-    loadLocal,
-    setApplyNextBar,
-  } = useAppStore((state) => ({
-    regenerate: state.regenerate,
-    exportJson: state.exportJson,
-    importJson: state.importJson,
-    buildShareLink: state.buildShareLink,
-    ui: state.ui,
-    setTab: state.setTab,
-    saveLocal: state.saveLocal,
-    loadLocal: state.loadLocal,
-    setApplyNextBar: state.setApplyNextBar,
-  }));
+  const regenerate = useAppStore((state) => state.regenerate);
+  const exportJson = useAppStore((state) => state.exportJson);
+  const importJson = useAppStore((state) => state.importJson);
+  const buildShareLink = useAppStore((state) => state.buildShareLink);
+  const ui = useAppStore((state) => state.ui);
+  const setTab = useAppStore((state) => state.setTab);
+  const saveLocal = useAppStore((state) => state.saveLocal);
+  const loadLocal = useAppStore((state) => state.loadLocal);
+  const setApplyNextBar = useAppStore((state) => state.setApplyNextBar);
 
   const handleNew = () => regenerate();
 

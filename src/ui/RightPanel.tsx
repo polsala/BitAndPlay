@@ -27,11 +27,9 @@ const tabIcons: Record<string, React.ReactNode> = {
 };
 
 export const RightPanel = () => {
-  const { ui, setTab, setMode } = useAppStore((state) => ({
-    ui: state.ui,
-    setTab: state.setTab,
-    setMode: state.setMode,
-  }));
+  const ui = useAppStore((state) => state.ui);
+  const setTab = useAppStore((state) => state.setTab);
+  const setMode = useAppStore((state) => state.setMode);
 
   if (ui.cinema) return null;
 

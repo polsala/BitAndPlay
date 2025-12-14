@@ -10,13 +10,10 @@ const scenes: { id: "tunnel" | "grid" | "orbits"; title: string; detail: string 
 ];
 
 export const VisualizerTab = () => {
-  const { visualizerScene, setVisualizerScene, visualizerQuality, setVisualizerQuality } =
-    useAppStore((state) => ({
-      visualizerScene: state.visualizerScene,
-      setVisualizerScene: state.setVisualizerScene,
-      visualizerQuality: state.visualizerQuality,
-      setVisualizerQuality: state.setVisualizerQuality,
-    }));
+  const visualizerScene = useAppStore((state) => state.visualizerScene);
+  const setVisualizerScene = useAppStore((state) => state.setVisualizerScene);
+  const visualizerQuality = useAppStore((state) => state.visualizerQuality);
+  const setVisualizerQuality = useAppStore((state) => state.setVisualizerQuality);
 
   return (
     <div className="space-y-4 text-sm">

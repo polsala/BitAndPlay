@@ -11,12 +11,10 @@ const scales = ["major", "minor", "dorian", "mixolydian"] as const;
 const keys = ["C", "D", "E", "F", "G", "A", "B", "Bb", "Eb", "Ab"];
 
 export const GenerateTab = () => {
-  const { params, updateParams, regenerate, variation } = useAppStore((state) => ({
-    params: state.params,
-    updateParams: state.updateParams,
-    regenerate: state.regenerate,
-    variation: state.variation,
-  }));
+  const params = useAppStore((state) => state.params);
+  const updateParams = useAppStore((state) => state.updateParams);
+  const regenerate = useAppStore((state) => state.regenerate);
+  const variation = useAppStore((state) => state.variation);
   const [seedInput, setSeedInput] = useState(params.seed.toString());
 
   const applySeed = () => {

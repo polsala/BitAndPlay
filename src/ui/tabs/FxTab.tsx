@@ -4,12 +4,10 @@ import { Slider } from "../components/slider";
 import { Switch } from "../components/switch";
 
 export const FxTab = () => {
-  const { headroom, setHeadroom, ui, toggleCinema } = useAppStore((state) => ({
-    headroom: state.headroom,
-    setHeadroom: state.setHeadroom,
-    ui: state.ui,
-    toggleCinema: state.toggleCinema,
-  }));
+  const headroom = useAppStore((state) => state.headroom);
+  const setHeadroom = useAppStore((state) => state.setHeadroom);
+  const ui = useAppStore((state) => state.ui);
+  const toggleCinema = useAppStore((state) => state.toggleCinema);
 
   return (
     <div className="space-y-4 text-sm">

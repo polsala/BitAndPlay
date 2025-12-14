@@ -28,7 +28,7 @@ const usePrefersReducedMotion = () => {
 
 export const VisualizerCanvas = ({ analyser, scene, quality }: Props) => {
   const bands = useAudioBands(analyser, 0.22);
-  const { ui } = useAppStore((state) => ({ ui: state.ui }));
+  const ui = useAppStore((state) => state.ui);
   const prefersReducedMotion = usePrefersReducedMotion();
   const motion = prefersReducedMotion ? 0.35 : 1;
 

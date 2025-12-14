@@ -10,12 +10,10 @@ const quantizeOptions: Array<[string, 0.125 | 0.25 | 0.5]> = [
 ];
 
 export const EditTab = () => {
-  const { song, toggleTrackMute, setQuantize, setSwing } = useAppStore((state) => ({
-    song: state.song,
-    toggleTrackMute: state.toggleTrackMute,
-    setQuantize: state.setQuantize,
-    setSwing: state.setSwing,
-  }));
+  const song = useAppStore((state) => state.song);
+  const toggleTrackMute = useAppStore((state) => state.toggleTrackMute);
+  const setQuantize = useAppStore((state) => state.setQuantize);
+  const setSwing = useAppStore((state) => state.setSwing);
 
   return (
     <div className="space-y-4 text-sm">

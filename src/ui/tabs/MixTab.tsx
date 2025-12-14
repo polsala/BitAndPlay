@@ -4,13 +4,11 @@ import { Switch } from "../components/switch";
 import { Button } from "../components/button";
 
 export const MixTab = () => {
-  const { song, ui, setApplyNextBar, saveLocal, loadLocal } = useAppStore((state) => ({
-    song: state.song,
-    ui: state.ui,
-    setApplyNextBar: state.setApplyNextBar,
-    saveLocal: state.saveLocal,
-    loadLocal: state.loadLocal,
-  }));
+  const song = useAppStore((state) => state.song);
+  const ui = useAppStore((state) => state.ui);
+  const setApplyNextBar = useAppStore((state) => state.setApplyNextBar);
+  const saveLocal = useAppStore((state) => state.saveLocal);
+  const loadLocal = useAppStore((state) => state.loadLocal);
 
   return (
     <div className="space-y-4 text-sm">

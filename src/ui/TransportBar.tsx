@@ -13,14 +13,12 @@ interface Props {
 }
 
 export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props) => {
-  const { setBpm, setSwing, regenerate, variation, ui, setApplyNextBar } = useAppStore((state) => ({
-    setBpm: state.setBpm,
-    setSwing: state.setSwing,
-    regenerate: state.regenerate,
-    variation: state.variation,
-    ui: state.ui,
-    setApplyNextBar: state.setApplyNextBar,
-  }));
+  const setBpm = useAppStore((state) => state.setBpm);
+  const setSwing = useAppStore((state) => state.setSwing);
+  const regenerate = useAppStore((state) => state.regenerate);
+  const variation = useAppStore((state) => state.variation);
+  const ui = useAppStore((state) => state.ui);
+  const setApplyNextBar = useAppStore((state) => state.setApplyNextBar);
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-black/70 backdrop-blur-xl">
