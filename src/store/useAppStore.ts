@@ -212,13 +212,17 @@ export const useAppStore = create<StoreState>()(
       swing: song.swing,
       project: shouldResetProject ? projectFromSong(song) : get().project,
     });
-    await loadSong(song, get().ui.applyNextBar);
+    await loadSong(song, false);
   },
   variation: async () => {
     const song = generateVariation(get().song);
     const shouldResetProject = get().ui.mode === "playground";
-    set({ song, project: shouldResetProject ? projectFromSong(song) : get().project });
-    await loadSong(song, true);
+    set({
+      song,
+      params: { ...get().params, seed: song.seed, bpm: song.bpm },
+      project: shouldResetProject ? projectFromSong(song) : get().project,
+    });
+    await loadSong(song, false);
   },
   updateParams: async (changes: Partial<GeneratorParams>, autorender = true) => {
     const params = { ...get().params, ...changes };

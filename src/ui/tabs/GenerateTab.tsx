@@ -5,6 +5,7 @@ import { Input } from "../components/input";
 import { Button } from "../components/button";
 import { Slider } from "../components/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../components/select";
+import { useEffect } from "react";
 
 const presets = ["Voyager", "PixelRush", "NightDrive", "Skyline"];
 const scales = ["major", "minor", "dorian", "mixolydian"] as const;
@@ -17,8 +18,19 @@ export const GenerateTab = () => {
   const variation = useAppStore((state) => state.variation);
   const [seedInput, setSeedInput] = useState(params.seed.toString());
 
+  useEffect(() => {
+    setSeedInput(params.seed.toString());
+  }, [params.seed]);
+
   const applySeed = () => {
     const seed = Number(seedInput) || Math.floor(Math.random() * 999999);
+    setSeedInput(seed.toString());
+    regenerate(seed);
+  };
+
+  const reroll = () => {
+    const seed = Math.floor(Math.random() * 999999);
+    setSeedInput(seed.toString());
     regenerate(seed);
   };
 
@@ -36,7 +48,11 @@ export const GenerateTab = () => {
           <div>
             <label className="text-xs text-muted-foreground">Seed</label>
             <div className="mt-1 flex gap-2">
-              <Input value={seedInput} onChange={(e) => setSeedInput(e.target.value)} />
+              <Input
+                value={seedInput}
+                onChange={(e) => setSeedInput(e.target.value)}
+                className="w-full text-sm"
+              />
               <Button variant="ghost" onClick={applySeed}>
                 Apply
               </Button>
@@ -146,9 +162,36 @@ export const GenerateTab = () => {
             <Dices className="mr-2 h-4 w-4" />
             Variation
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => regenerate()}>
+          <Button size="sm" variant="ghost" onClick={reroll}>
             Reroll
           </Button>
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-border/70 bg-card/60 p-4 text-sm leading-relaxed">
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
+            <Sparkle className="h-4 w-4 text-primary" />
+            How generation works
+          </div>
+          <p className="text-sm text-muted-foreground">
+            BitAndPlay builds patterns on a 16-step grid per bar. The seed feeds a deterministic RNG
+            that picks chords, arps, drum hits, and fills based on preset + key/scale. Sliders bias
+            how busy or syncopated parts get; BPM and bar count set loop length. Reroll swaps the
+            seed, Variation morphs motifs while keeping the vibe, and Apply reuses your current seed
+            with any parameter tweaks.
+          </p>
+        </div>
+        <div>
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
+            <Sparkle className="h-4 w-4 text-primary" />
+            Bar-safe updates
+          </div>
+          <p className="text-sm text-muted-foreground">
+            The Bar-safe toggle (transport footer) defers engine swaps to the next bar to avoid
+            clicks. Turn it off for instant changes; leave it on during playback for smooth
+            scheduling.
+          </p>
         </div>
       </div>
     </div>

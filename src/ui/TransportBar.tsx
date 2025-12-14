@@ -70,7 +70,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
             Variation
           </Button>
           <div className="rounded-md border border-border/70 bg-card/60 px-3 py-2 text-xs text-muted-foreground">
-            Apply on bar
+            Bar-safe updates
             <Switch
               className="ml-2"
               checked={ui.applyNextBar}
