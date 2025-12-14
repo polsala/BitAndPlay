@@ -177,7 +177,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
             </Button>
             <Button
               size="sm"
-              variant="secondary"
+              variant={previewUrl ? "default" : "secondary"}
               onClick={handleTogglePreview}
               disabled={previewState === "loading"}
               className="gap-1"
