@@ -1,4 +1,17 @@
-import { Pause, Play, Repeat2, Rewind, Shuffle, Wand2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Download,
+  Loader2,
+  Pause,
+  PauseCircle,
+  Play,
+  PlayCircle,
+  RefreshCcw,
+  Repeat2,
+  Rewind,
+  Shuffle,
+  Wand2,
+} from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { Button } from "./components/button";
 import { Slider } from "./components/slider";
@@ -19,6 +32,74 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
   const variation = useAppStore((state) => state.variation);
   const ui = useAppStore((state) => state.ui);
   const setApplyNextBar = useAppStore((state) => state.setApplyNextBar);
+  const exportWav = useAppStore((state) => state.exportWav);
+  const pauseTransport = useAppStore((state) => state.pause);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [previewState, setPreviewState] = useState<"idle" | "loading" | "ready" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleRenderPreview = async () => {
+    if (previewState === "loading") return;
+    setPreviewState("loading");
+    try {
+      if (isPlaying) {
+        pauseTransport();
+      }
+      const blob = await exportWav(48000, true);
+      if (!blob) {
+        setPreviewState("idle");
+        return;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setPreviewState("ready");
+      await audio.play();
+      setPreviewState("playing");
+    } catch {
+      setPreviewState("idle");
+    }
+  };
+
+  const handleTogglePreview = async () => {
+    const audio = audioRef.current;
+    if (!audio || !previewUrl) {
+      await handleRenderPreview();
+      return;
+    }
+    if (isPlaying) {
+      pauseTransport();
+    }
+    if (previewState === "playing") {
+      audio.pause();
+      setPreviewState("ready");
+    } else {
+      try {
+        await audio.play();
+        setPreviewState("playing");
+      } catch {
+        setPreviewState("ready");
+      }
+    }
+  };
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-black/70 backdrop-blur-xl">
@@ -44,6 +125,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
               <span className="w-10 text-right text-xs">{bpm}</span>
             </div>
           </div>
+        <div className="flex items-center gap-2">
           <div className="rounded-md border border-border/70 bg-card/60 px-3 py-2">
             <div className="text-[10px] uppercase text-muted-foreground">Swing</div>
             <div className="flex items-center gap-2">
@@ -58,6 +140,52 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
               <span className="w-8 text-right text-xs">{(swing * 100).toFixed(0)}%</span>
             </div>
           </div>
+          <div className="flex items-center gap-2 rounded-md border border-border/70 bg-card/60 px-3 py-2">
+            <div className="text-[10px] uppercase text-muted-foreground">Render preview</div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleRenderPreview}
+              disabled={previewState === "loading"}
+              title="Re-render HQ preview"
+            >
+              {previewState === "loading" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleTogglePreview}
+              disabled={previewState === "loading"}
+              className="gap-1"
+              title="Play/Pause rendered preview"
+            >
+              {previewState === "playing" ? (
+                <PauseCircle className="h-4 w-4" />
+              ) : (
+                <PlayCircle className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!previewUrl || previewState === "loading"}
+              onClick={() => {
+                if (!previewUrl) return;
+                const a = document.createElement("a");
+                a.href = previewUrl;
+                a.download = "bitandplay-preview.wav";
+                a.click();
+              }}
+              title="Download rendered preview"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         </div>
 
         <div className="flex items-center gap-2">
