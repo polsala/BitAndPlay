@@ -33,7 +33,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-card text-popover-foreground shadow-md",
         position === "popper" && "translate-y-1",
         className,
       )}
@@ -43,7 +43,7 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">
         <ChevronUp className="h-4 w-4" />
       </SelectPrimitive.ScrollUpButton>
-      <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+      <SelectPrimitive.Viewport className="bg-card p-1">{children}</SelectPrimitive.Viewport>
       <SelectPrimitive.ScrollDownButton className="flex cursor-default items-center justify-center py-1">
         <ChevronDown className="h-4 w-4" />
       </SelectPrimitive.ScrollDownButton>
