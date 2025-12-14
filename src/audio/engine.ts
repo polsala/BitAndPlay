@@ -30,16 +30,28 @@ const disposeInstruments = () => {
   engine.instruments = [];
 };
 
+const normalizeEvents = <T extends { time: number }>(events: T[]): T[] => {
+  const sorted = [...events].sort((a, b) => a.time - b.time);
+  let last = -Infinity;
+  return sorted.map((event) => {
+    const t = event.time <= last ? last + 0.0001 : event.time;
+    last = t;
+    return { ...event, time: t };
+  });
+};
+
 const scheduleTrack = (track: Track) => {
   const destination = engine.masterGain ?? Tone.getDestination();
   const instrument = createInstrument(track, destination);
   engine.instruments.push(instrument);
 
   if (track.role === "melodic" && track.pattern.notes) {
-    const events = track.pattern.notes.map((note) => ({
-      time: Tone.Time(note.time / 4, "m").toSeconds(),
-      note,
-    }));
+    const events = normalizeEvents(
+      track.pattern.notes.map((note) => ({
+        time: Tone.Time(note.time / 4, "m").toSeconds(),
+        note,
+      })),
+    );
     const part = new Tone.Part((time, value: { note: typeof track.pattern.notes[number] }) => {
       instrument.triggerNote?.(time, value.note);
     }, events);
@@ -48,10 +60,12 @@ const scheduleTrack = (track: Track) => {
     part.start(0);
     engine.parts.push(part);
   } else if (track.pattern.drums && (track.role === "drum" || track.role === "pcm")) {
-    const events = track.pattern.drums.map((hit: DrumHit) => ({
-      time: Tone.Time(hit.time / 4, "m").toSeconds(),
-      hit,
-    }));
+    const events = normalizeEvents(
+      track.pattern.drums.map((hit: DrumHit) => ({
+        time: Tone.Time(hit.time / 4, "m").toSeconds(),
+        hit,
+      })),
+    );
     const part = new Tone.Part((time, value: { hit: DrumHit }) => {
       instrument.triggerDrum?.(time, value.hit);
     }, events);
@@ -62,11 +76,12 @@ const scheduleTrack = (track: Track) => {
   }
 };
 
-const applySong = (song: Song) => {
+const applySong = (song: Song, time?: number) => {
   disposeParts();
   disposeInstruments();
   engine.song = song;
-  Tone.Transport.bpm.rampTo(song.bpm, 0.05);
+  const now = time ?? Tone.now();
+  Tone.Transport.bpm.rampTo(song.bpm, 0.05, now);
   Tone.Transport.swing = song.swing;
   Tone.Transport.swingSubdivision = "16n";
   song.tracks.forEach(scheduleTrack);
@@ -88,7 +103,7 @@ export const initAudio = async () => {
 export const loadSong = async (song: Song, applyAtNextBar?: boolean) => {
   await initAudio();
   if (applyAtNextBar && Tone.Transport.state === "started") {
-    Tone.Transport.scheduleOnce(() => applySong(song), "1m");
+    Tone.Transport.scheduleOnce((time) => applySong(song, time), "1m");
   } else {
     applySong(song);
   }

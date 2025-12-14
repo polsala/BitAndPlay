@@ -13,7 +13,7 @@ export const OrbitBars = ({ bands, quality, motion = 1 }: Props) => {
   const group = useRef<Group>(null);
   const bars = useMemo(() => {
     const count = quality === "high" ? 32 : quality === "med" ? 24 : 16;
-    return new Array(count).fill(0).map((_, i) => ({
+    return Array.from({ length: count }, (_, i) => ({
       angle: (i / count) * Math.PI * 2,
       radius: 4 + (i % 5) * 0.2,
     }));
@@ -21,9 +21,11 @@ export const OrbitBars = ({ bands, quality, motion = 1 }: Props) => {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    group.current?.children.forEach((child, idx) => {
+    if (!group.current) return;
+    group.current.children.forEach((child, idx) => {
       const mesh = child as Mesh;
       const bar = bars[idx];
+      if (!bar) return;
       const wobble = Math.sin(t + idx * 0.3) * 0.2 * motion;
       const radius = bar.radius + bands.low * 2 * motion + wobble;
       const y = 0.5 + bands.mid * 4 * motion + Math.sin(t * 0.5 + idx) * 0.2 * motion;
