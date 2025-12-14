@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, Plus, Repeat2, Square, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { MinusCircle, Pause, Play, Plus, Repeat2, Square, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import * as Tone from "tone";
 import type { Clip, ProjectTrack } from "@/types/project";
 import { STEPS_PER_BAR, STEPS_PER_BEAT } from "@/types/project";
@@ -8,6 +8,8 @@ import { TimelineRuler } from "./TimelineRuler";
 import { ClipEditorDrawer } from "./ClipEditorDrawer";
 import { Button } from "@/ui/components/button";
 import { Slider } from "@/ui/components/slider";
+import { Input } from "@/ui/components/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/ui/components/select";
 
 interface ClipBlockProps {
   clip: Clip;
@@ -269,12 +271,16 @@ export const StudioView = () => {
   const transposePattern = useAppStore((state) => state.transposePattern);
   const quantizePattern = useAppStore((state) => state.quantizePattern);
   const resetDrumPattern = useAppStore((state) => state.resetDrumPattern);
+  const addTrack = useAppStore((state) => state.addTrack);
+  const removeTrack = useAppStore((state) => state.removeTrack);
 
   const stepWidth = 14 * studio.zoom;
   const totalSteps = project.lengthBars * STEPS_PER_BAR;
   const [playheadBars, setPlayheadBars] = useState(0);
   const playheadX = Math.min(totalSteps * stepWidth, playheadBars * STEPS_PER_BAR * stepWidth);
   const createClipAt = useAppStore((state) => state.createClipAt);
+  const [newTrackType, setNewTrackType] = useState<ProjectTrack["type"]>("PULSE1");
+  const [newTrackName, setNewTrackName] = useState("");
 
   useEffect(() => {
     if (!playing) {
@@ -402,7 +408,40 @@ export const StudioView = () => {
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-56 shrink-0 border-r border-border/70 bg-black/40">
+        <div className="w-64 shrink-0 border-r border-border/70 bg-black/40">
+          <div className="space-y-2 border-b border-border/70 px-3 py-3">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Add track</div>
+            <Input
+              placeholder="Name"
+              value={newTrackName}
+              onChange={(e) => setNewTrackName(e.target.value)}
+              className="h-8 bg-black/50 text-sm"
+            />
+            <Select
+              value={newTrackType}
+              onValueChange={(val) => setNewTrackType(val as ProjectTrack["type"])}
+            >
+              <SelectTrigger className="h-8 bg-black/50 text-xs">
+                <span className="truncate">{newTrackType}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {["PULSE1", "PULSE2", "TRIANGLE", "SAW", "SINE", "NOISE", "PCM"].map((type) => (
+                  <SelectItem key={type} value={type} className="text-xs">
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-full"
+              onClick={() => addTrack({ name: newTrackName || "New Track", type: newTrackType })}
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              Add track
+            </Button>
+          </div>
           {project.tracks.map((track) => (
             <div
               key={track.id}
@@ -427,6 +466,13 @@ export const StudioView = () => {
                 >
                   Solo
                 </Button>
+                <button
+                  className="rounded-full border border-border/60 p-1 text-muted-foreground hover:border-destructive hover:text-destructive"
+                  onClick={() => removeTrack(track.id)}
+                  aria-label="Remove track"
+                >
+                  <MinusCircle className="h-4 w-4" />
+                </button>
               </div>
             </div>
           ))}

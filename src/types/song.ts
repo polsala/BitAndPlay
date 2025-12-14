@@ -1,4 +1,4 @@
-export type TrackId = "pulse1" | "pulse2" | "triangle" | "noise" | "pcm";
+export type TrackId = string;
 export type ScaleName = "major" | "minor" | "dorian" | "mixolydian";
 
 export interface Note {

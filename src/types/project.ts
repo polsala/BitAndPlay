@@ -3,7 +3,7 @@ import type { TrackId } from "./song";
 export const STEPS_PER_BEAT = 4;
 export const STEPS_PER_BAR = 16;
 
-export type TrackType = "PULSE1" | "PULSE2" | "TRIANGLE" | "NOISE" | "PCM";
+export type TrackType = "PULSE1" | "PULSE2" | "TRIANGLE" | "NOISE" | "PCM" | "SINE" | "SAW";
 export type DrumLane = "kick" | "snare" | "hat" | "perc" | "fx";
 
 export interface MixerSettings {

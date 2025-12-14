@@ -51,10 +51,13 @@ const projectTrackToInstrument = (track: ProjectTrack): Track => {
       ? "triangle"
       : track.type === "NOISE"
         ? "noise"
-        : track.type === "PCM"
+        : track.type === "PCM" || track.type === "SINE"
           ? "sine"
-          : "pulse";
-  const role: Track["role"] = track.type === "NOISE" || track.type === "PCM" ? "drum" : "melodic";
+          : track.type === "SAW"
+            ? "pulse"
+            : "pulse";
+  const role: Track["role"] =
+    track.type === "NOISE" || track.type === "PCM" ? "drum" : "melodic";
   return {
     id: track.id,
     name: track.name,

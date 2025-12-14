@@ -11,18 +11,12 @@ import {
 import { createDeterministicId } from "@/utils/id";
 
 const resolveTrackType = (id: Track["id"]): TrackType => {
-  switch (id) {
-    case "pulse1":
-      return "PULSE1";
-    case "pulse2":
-      return "PULSE2";
-    case "triangle":
-      return "TRIANGLE";
-    case "noise":
-      return "NOISE";
-    default:
-      return "PCM";
-  }
+  if (id === "pulse1") return "PULSE1";
+  if (id === "pulse2") return "PULSE2";
+  if (id === "triangle") return "TRIANGLE";
+  if (id === "noise") return "NOISE";
+  if (id === "pcm") return "PCM";
+  return "SINE";
 };
 
 const makeDrumLanes = (lengthSteps: number) => {

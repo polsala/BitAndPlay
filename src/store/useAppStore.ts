@@ -80,6 +80,8 @@ interface StoreState {
   setQuantize: (value: Song["quantize"]) => void;
   setProjectQuantize: (steps: number) => Promise<void>;
   clearClips: () => Promise<void>;
+  addTrack: (payload: { name: string; type: Project["tracks"][number]["type"] }) => Promise<void>;
+  removeTrack: (id: Track["id"]) => Promise<void>;
   createClipAt: (trackId: Track["id"], startStep: number, lengthSteps: number) => Promise<void>;
   addClip: (trackId: Track["id"]) => Promise<void>;
   moveClip: (id: Clip["id"], startStep: number) => Promise<void>;
@@ -287,6 +289,41 @@ export const useAppStore = create<StoreState>()(
       clips: [],
     }));
     set((state) => ({ studio: { ...state.studio, selectedClipId: undefined } }));
+  },
+  addTrack: async ({ name, type }) => {
+    const newId = createDeterministicId("track");
+    await updateProject((project) => ({
+      ...project,
+      tracks: [
+        ...project.tracks,
+        {
+          id: newId,
+          name: name || `Track ${project.tracks.length + 1}`,
+          type,
+          mixer: { volume: 0.9, mute: false, solo: false },
+        },
+      ],
+    }));
+  },
+  removeTrack: async (id: Track["id"]) => {
+    const current = get().project;
+    const remainingClips = current.clips.filter((c) => c.trackId !== id);
+    const usedPatternIds = new Set(remainingClips.map((c) => c.patternId));
+    const filteredPatterns = current.patterns.filter((p) => usedPatternIds.has(p.id));
+    await updateProject((project) => ({
+      ...project,
+      tracks: project.tracks.filter((t) => t.id !== id),
+      clips: remainingClips,
+      patterns: filteredPatterns,
+    }));
+    set((state) => ({
+      studio: {
+        ...state.studio,
+        selectedClipId: remainingClips.find((c) => c.id === state.studio.selectedClipId)
+          ? state.studio.selectedClipId
+          : undefined,
+      },
+    }));
   },
   createClipAt: async (trackId: Track["id"], startStep: number, lengthSteps: number) => {
     const track = get().project.tracks.find((t) => t.id === trackId);
