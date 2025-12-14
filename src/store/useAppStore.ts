@@ -402,6 +402,37 @@ export const useAppStore = create<StoreState>()(
       clips: project.clips.map((clip) =>
         clip.id === id ? { ...clip, lengthSteps: Math.max(minLength, lengthSteps) } : clip,
       ),
+      patterns: (() => {
+        const targetClip = project.clips.find((c) => c.id === id);
+        if (!targetClip) return project.patterns;
+        const targetPattern = project.patterns.find((p) => p.id === targetClip.patternId);
+        if (!targetPattern) return project.patterns;
+        const nextLength = Math.max(minLength, lengthSteps);
+        return project.patterns.map((p) => {
+          if (p.id !== targetPattern.id) return p;
+          if (p.kind === "tonal") {
+            return {
+              ...p,
+              lengthSteps: nextLength,
+              notes: p.notes
+                .map((n) => {
+                  if (n.startStep >= nextLength) return null;
+                  const maxLen = Math.max(minLength, Math.min(n.lengthSteps, nextLength - n.startStep));
+                  return { ...n, lengthSteps: maxLen };
+                })
+                .filter(Boolean) as typeof p.notes,
+            };
+          }
+          const resizedLanes = Object.fromEntries(
+            Object.entries(p.lanes).map(([lane, steps]) => {
+              if (steps.length === nextLength) return [lane, steps];
+              if (steps.length > nextLength) return [lane, steps.slice(0, nextLength)];
+              return [lane, [...steps, ...Array.from({ length: nextLength - steps.length }, () => false)]];
+            }),
+          ) as typeof p.lanes;
+          return { ...p, lengthSteps: nextLength, lanes: resizedLanes };
+        });
+      })(),
     }));
   },
   selectClip: (id?: Clip["id"]) =>
