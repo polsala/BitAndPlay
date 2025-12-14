@@ -60,7 +60,7 @@ export const RightPanel = () => {
             </TabsTrigger>
           ))}
         </TabsList>
-        <div className="mt-4 max-h-[calc(100vh-160px)] overflow-y-auto pr-2">
+        <div className="mt-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 scroll-smoothbars">
           <TabsContent value="Generate">
             <GenerateTab />
           </TabsContent>
