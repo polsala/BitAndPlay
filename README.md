@@ -1,6 +1,6 @@
 # BitAndPlay
 
-BitAndPlay is a browser-only 8/16-bit chiptune workstation: deterministic seeded generation, Tone.js transport, a rhythm-reactive 3D visualizer, and dual export paths (live capture + HQ offline WAV). The repo is ready for GitHub Pages deployment out of the box.
+BitAndPlay is a browser-only 8/16-bit chiptune workstation: deterministic seeded generation, a Studio arrangement view, Tone.js transport, a rhythm-reactive 3D visualizer, and dual export paths (live capture + HQ offline WAV). The repo is ready for GitHub Pages deployment out of the box.
 
 ## Quick start
 
@@ -20,9 +20,10 @@ Open the provided URL and click **Enable audio** to start the audio context (req
 
 ## Features
 - **Seeded generator**: reproducible songs with presets, key/scale, energy/density/syncopation/complexity sliders, and variation reroll.
-- **Tone.js engine**: per-track synths (pulse, triangle, noise, transient), limiter + analyser, swing/quantize, bar-aligned updates to avoid clicks.
-- **Transport**: play/pause/stop, BPM + swing controls, regenerate/variation, “apply on next bar” safety.
-- **3D visualizer**: three scenes (Tunnel Spectrum, Neon Grid, Orbit Bars) built with @react-three/fiber + Three.js; low/mid/high band mapping and quality selector.
+- **Studio (arrangement)**: tracks you can add/remove, clip lanes with snap/zoom, drag/resize clips, piano roll & drum step editors, loop region, playhead follow. Apply-on-next-bar keeps updates click-free. See `docs/studio.md`.
+- **Tone.js engine**: per-track synths (pulse, triangle, saw, sine, noise, PCM), limiter + analyser, swing/quantize, bar-aligned updates to avoid clicks.
+- **Transport**: play/pause/stop, BPM + swing controls, regenerate/variation, “apply on next bar” safety, cinema toggle (with in-canvas exit button).
+- **3D visualizer**: five scenes (Tunnel Spectrum, Neon Grid, Orbit Bars, Black Hole, Interactive Bubbles) built with @react-three/fiber + Three.js; low/mid/high band mapping and quality selector. See `docs/visualizer.md`.
 - **Export**: fast capture via `MediaRecorder` + HQ offline WAV render with OfflineAudioContext + WAV encoder; JSON import/export; shareable URL query params.
 - **Persistence**: optional localStorage save/restore; share links (`?seed=...&preset=...`).
 - **UI**: minimal dark Ableton-style skin with shadcn/ui building blocks and Tailwind utilities.
@@ -37,10 +38,11 @@ src/
     instruments.ts Track synth definitions + master chain
     generator/     Deterministic song builder (rng/theory/patterns)
     render/        Offline render + WAV encoder helpers
-  store/           Zustand global store (transport/UI/export state)
+  store/           Zustand global store (transport/UI/export/studio state)
   ui/              Top bar, transport, right panel tabs, shadcn components
   viz/             Visualizer canvas + scenes + analyser hook
-  types/           Song and track types
+  studio/          Arrangement view components and defaults
+  types/           Song and project types
 ```
 
 - **Audio engine**: `engine.ts` initializes Tone, master limiter, analyser, and media stream for fast export. Track parts are scheduled with `Tone.Part`, looping per song length; updates optionally defer to the next bar for click-free changes.
