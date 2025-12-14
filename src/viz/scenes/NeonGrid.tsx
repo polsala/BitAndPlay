@@ -33,7 +33,7 @@ export const NeonGrid = ({ bands, quality, motion = 1 }: Props) => {
     positions.forEach(([x, z], i) => {
       const wave = Math.sin(t + (x + z) * 0.3) * 0.4 * motion;
       const height = 0.3 + wave + bands.low * 2 * motion + bands.high * 1.5 * motion;
-      obj.position.set(x, height / 2 - 1.4, z - t * 0.3 * motion);
+      obj.position.set(x, height / 2 - 1.4, z);
       obj.scale.set(0.4, height, 0.4);
       obj.updateMatrix();
       mesh.current!.setMatrixAt(i, obj.matrix);
