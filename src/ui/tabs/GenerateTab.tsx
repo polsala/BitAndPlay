@@ -16,6 +16,7 @@ export const GenerateTab = () => {
   const updateParams = useAppStore((state) => state.updateParams);
   const regenerate = useAppStore((state) => state.regenerate);
   const variation = useAppStore((state) => state.variation);
+  const setParams = useAppStore((state) => state.updateParams);
   const [seedInput, setSeedInput] = useState(params.seed.toString());
 
   useEffect(() => {
@@ -34,12 +35,46 @@ export const GenerateTab = () => {
     regenerate(seed);
   };
 
+  const randomizeAll = () => {
+    const seed = Math.floor(Math.random() * 999999);
+    const preset = presets[Math.floor(Math.random() * presets.length)];
+    const key = keys[Math.floor(Math.random() * keys.length)];
+    const scale = scales[Math.floor(Math.random() * scales.length)];
+    const bpm = 80 + Math.floor(Math.random() * 90);
+    const bars = [4, 8, 12, 16, 24, 32][Math.floor(Math.random() * 6)];
+    const energy = Math.random();
+    const density = Math.random();
+    const complexity = Math.random();
+    const syncopation = Math.random();
+    setSeedInput(seed.toString());
+    setParams(
+      {
+        seed,
+        preset,
+        key,
+        scale,
+        bpm,
+        bars,
+        energy,
+        density,
+        complexity,
+        syncopation,
+      },
+      true,
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border/70 bg-card/70 p-4 shadow-glow">
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold">Seeded generation</div>
-          <Button size="sm" variant="secondary" onClick={() => regenerate()}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => regenerate(params.seed)}
+            title="Rebuild from current seed + settings"
+          >
             <RefreshCcw className="mr-2 h-4 w-4" />
             Regenerate
           </Button>
@@ -158,14 +193,31 @@ export const GenerateTab = () => {
           </div>
         ))}
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => variation()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => variation()}
+            title="Keep the vibe, reshuffle motifs/patterns"
+          >
             <Dices className="mr-2 h-4 w-4" />
             Variation
           </Button>
-          <Button size="sm" variant="ghost" onClick={reroll}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={reroll}
+            title="New seed, regenerate a fresh song"
+          >
             Reroll
           </Button>
         </div>
+      </div>
+
+      <div className="flex justify-center">
+        <Button variant="secondary" onClick={randomizeAll}>
+          <Dices className="mr-2 h-4 w-4" />
+          Surprise me
+        </Button>
       </div>
 
       <div className="space-y-3 rounded-lg border border-border/70 bg-card/60 p-4 text-sm leading-relaxed">
