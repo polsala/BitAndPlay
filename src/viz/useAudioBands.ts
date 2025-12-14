@@ -13,6 +13,28 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export const useAudioBands = (analyser?: Tone.Analyser | null, smoothing = 0.2) => {
   const [bands, setBands] = useState<Bands>({ low: 0, mid: 0, high: 0, energy: 0 });
 
+  // fallback idle motion to keep visuals alive when analyser isn't ready yet
+  useEffect(() => {
+    if (analyser) return;
+    let mounted = true;
+    const started = performance.now();
+    const tick = () => {
+      if (!mounted) return;
+      const t = (performance.now() - started) / 1000;
+      setBands({
+        low: 0.2 * Math.sin(t * 0.6),
+        mid: 0.25 * Math.sin(t * 0.8 + 1),
+        high: 0.3 * Math.sin(t * 1.1 + 2),
+        energy: 0.35,
+      });
+      requestAnimationFrame(tick);
+    };
+    tick();
+    return () => {
+      mounted = false;
+    };
+  }, [analyser]);
+
   useEffect(() => {
     if (!analyser) return;
     let mounted = true;
@@ -34,7 +56,7 @@ export const useAudioBands = (analyser?: Tone.Analyser | null, smoothing = 0.2) 
       }));
       requestAnimationFrame(update);
     };
-    update();
+    requestAnimationFrame(update);
     return () => {
       mounted = false;
     };
