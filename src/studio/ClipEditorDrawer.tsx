@@ -35,7 +35,7 @@ export const ClipEditorDrawer = ({
   const visible = clip && pattern && track;
   if (!visible || !clip || !pattern || !track) {
     return (
-      <div className="h-12 border-t border-border/70 bg-black/60 px-4 text-sm text-muted-foreground">
+      <div className="h-14 border-t border-border/70 bg-black/60 px-4 text-sm text-muted-foreground">
         <div className="flex h-full items-center gap-2">
           <Piano className="h-4 w-4" />
           Select a clip to edit notes and steps.

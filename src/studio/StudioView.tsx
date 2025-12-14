@@ -407,7 +407,7 @@ export const StudioView = () => {
           <ZoomIn className="h-4 w-4 text-muted-foreground" />
         </div>
       </div>
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pb-16">
         <div className="w-72 shrink-0 overflow-y-auto overflow-x-hidden border-r border-border/70 bg-black/40 scroll-smoothbars">
           <div className="space-y-2 border-b border-border/70 px-3 py-3">
             <div className="text-xs font-semibold uppercase text-muted-foreground">Add track</div>
@@ -477,7 +477,7 @@ export const StudioView = () => {
             </div>
           ))}
         </div>
-        <div className="relative flex-1 min-w-0 overflow-x-auto overflow-y-auto pb-3 scroll-smoothbars">
+        <div className="relative flex-1 min-w-0 overflow-x-auto overflow-y-auto pb-6 scroll-smoothbars">
           <div className="relative" style={{ width: totalSteps * stepWidth }}>
             <TimelineRuler bars={project.lengthBars} stepWidth={stepWidth} />
             <div
