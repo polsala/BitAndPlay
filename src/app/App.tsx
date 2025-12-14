@@ -80,7 +80,7 @@ export const AppShell = () => {
             )}
             {overlay}
             {ui.cinema && (
-              <div className="absolute left-4 top-4 z-40">
+              <div className="absolute right-4 top-4 z-40">
                 <Button size="sm" variant="secondary" onClick={toggleCinema} className="shadow-glow">
                   Exit cinema
                 </Button>
