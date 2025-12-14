@@ -7,10 +7,12 @@ import { TunnelSpectrum } from "./scenes/TunnelSpectrum";
 import { NeonGrid } from "./scenes/NeonGrid";
 import { OrbitBars } from "./scenes/OrbitBars";
 import { Starfield } from "./scenes/Starfield";
+import { BlackHole } from "./scenes/BlackHole";
+import { Bubbles } from "./scenes/Bubbles";
 
 interface Props {
   analyser?: Tone.Analyser | null;
-  scene: "tunnel" | "grid" | "orbits";
+  scene: "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles";
   quality: "low" | "med" | "high";
 }
 
@@ -72,6 +74,8 @@ export const VisualizerCanvas = ({ analyser, scene, quality }: Props) => {
         {scene === "tunnel" && <TunnelSpectrum bands={bands} quality={quality} motion={motion} />}
         {scene === "grid" && <NeonGrid bands={bands} quality={quality} motion={motion} />}
         {scene === "orbits" && <OrbitBars bands={bands} quality={quality} motion={motion} />}
+        {scene === "blackhole" && <BlackHole bands={bands} quality={quality} motion={motion} />}
+        {scene === "bubbles" && <Bubbles bands={bands} quality={quality} motion={motion} />}
       </Canvas>
     </div>
   );

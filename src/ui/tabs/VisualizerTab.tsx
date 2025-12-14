@@ -3,10 +3,16 @@ import { Button } from "../components/button";
 import { Slider } from "../components/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../components/select";
 
-const scenes: { id: "tunnel" | "grid" | "orbits"; title: string; detail: string }[] = [
+const scenes: {
+  id: "tunnel" | "grid" | "orbits" | "blackhole" | "bubbles";
+  title: string;
+  detail: string;
+}[] = [
   { id: "tunnel", title: "Tunnel Spectrum", detail: "Cascading rings with band-driven depth." },
   { id: "grid", title: "Neon Grid", detail: "Bass warps the horizon, highs shimmer on tiles." },
   { id: "orbits", title: "Orbit Bars", detail: "Floating bars orbit with mid/hi modulation." },
+  { id: "blackhole", title: "Black Hole", detail: "Particle spiral with glowing accretion swirl." },
+  { id: "bubbles", title: "Interactive Bubbles", detail: "Grab and fling glowing bubbles with the beat." },
 ];
 
 export const VisualizerTab = () => {
@@ -68,7 +74,7 @@ export const VisualizerTab = () => {
       </div>
 
       <Button variant="ghost" size="sm">
-        Cinema mode hides panels (toggle in FX tab)
+        Cinema mode (toggle in FX tab)
       </Button>
     </div>
   );
