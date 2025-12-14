@@ -7,6 +7,7 @@ import { TopBar } from "@/ui/TopBar";
 import { RightPanel } from "@/ui/RightPanel";
 import { TransportBar } from "@/ui/TransportBar";
 import { Button } from "@/ui/components/button";
+import { StudioView } from "@/studio/StudioView";
 
 export const AppShell = () => {
   const [analyser, setAnalyser] = useState<ReturnType<typeof getAnalyser>>();
@@ -59,17 +60,23 @@ export const AppShell = () => {
       <main className="flex min-h-screen flex-col pt-12">
         <div className="flex flex-1 flex-row">
           <section className="relative flex-1">
-            <VisualizerCanvas
-              analyser={analyser}
-              scene={visualizerScene}
-              quality={visualizerQuality}
-            />
-            <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-muted-foreground shadow-glow">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-3.5 w-3.5 text-primary" />
-                {song.preset} · {song.key} {song.scale}
-              </div>
-            </div>
+            {ui.mode === "studio" ? (
+              <StudioView />
+            ) : (
+              <>
+                <VisualizerCanvas
+                  analyser={analyser}
+                  scene={visualizerScene}
+                  quality={visualizerQuality}
+                />
+                <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-muted-foreground shadow-glow">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-3.5 w-3.5 text-primary" />
+                    {song.preset} · {song.key} {song.scale}
+                  </div>
+                </div>
+              </>
+            )}
             {overlay}
           </section>
           <RightPanel />

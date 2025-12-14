@@ -1,16 +1,20 @@
 import * as Tone from "tone";
-import type { DrumHit, Song, Track } from "@/types/song";
+import type { DrumHit, Note, Song, Track } from "@/types/song";
+import type { Clip, Pattern, Project, ProjectTrack } from "@/types/project";
+import { STEPS_PER_BAR, STEPS_PER_BEAT } from "@/types/project";
 import { createInstrument, createMasterChain, type InstrumentHandle } from "./instruments";
 
 interface EngineState {
   initialized: boolean;
   started: boolean;
   song?: Song;
+  project?: Project;
   instruments: InstrumentHandle[];
   parts: Tone.Part[];
   analyser?: Tone.Analyser;
   mediaDest?: MediaStreamAudioDestinationNode;
   masterGain?: Tone.Gain;
+  source: "song" | "project";
 }
 
 const engine: EngineState = {
@@ -18,6 +22,7 @@ const engine: EngineState = {
   started: false,
   instruments: [],
   parts: [],
+  source: "song",
 };
 
 const disposeParts = () => {
@@ -38,6 +43,72 @@ const normalizeEvents = <T extends { time: number }>(events: T[]): T[] => {
     last = t;
     return { ...event, time: t };
   });
+};
+
+const projectTrackToInstrument = (track: ProjectTrack): Track => {
+  const synth =
+    track.type === "TRIANGLE"
+      ? "triangle"
+      : track.type === "NOISE"
+        ? "noise"
+        : track.type === "PCM"
+          ? "sine"
+          : "pulse";
+  const role: Track["role"] = track.type === "NOISE" || track.type === "PCM" ? "drum" : "melodic";
+  return {
+    id: track.id,
+    name: track.name,
+    role,
+    pattern: { steps: STEPS_PER_BAR, length: 1 },
+    synth,
+    mute: track.mixer.mute,
+  };
+};
+
+const stepsToSeconds = (steps: number) =>
+  Tone.Time(steps / STEPS_PER_BAR, "m").toSeconds();
+
+const compileClipEvents = (
+  clip: Clip,
+  pattern: Pattern,
+): { notes?: { time: number; note: Note }[]; drums?: { time: number; hit: DrumHit }[] } => {
+  const clipStart = clip.startStep;
+  const clipEnd = clip.startStep + clip.lengthSteps;
+  if (pattern.kind === "tonal") {
+    const notes = pattern.notes
+      .map((note) => {
+        const globalStart = clipStart + note.startStep;
+        if (globalStart >= clipEnd) return null;
+        const remaining = clipEnd - (clipStart + note.startStep);
+        const lengthSteps = Math.max(1, Math.min(note.lengthSteps, remaining));
+        return {
+          time: stepsToSeconds(globalStart),
+          note: {
+            time: 0,
+            midi: note.pitch,
+            duration: lengthSteps / STEPS_PER_BEAT,
+            velocity: note.velocity,
+          },
+        };
+      })
+      .filter(Boolean) as { time: number; note: Note }[];
+    return { notes };
+  }
+  const drums: { time: number; hit: DrumHit }[] = [];
+  (Object.entries(pattern.lanes) as [DrumHit["type"] | "fx", boolean[]][]).forEach(
+    ([lane, steps]) => {
+      steps.forEach((active, idx) => {
+        if (!active) return;
+        const globalStep = clipStart + idx;
+        if (globalStep >= clipEnd) return;
+        drums.push({
+          time: stepsToSeconds(globalStep),
+          hit: { time: 0, type: (lane === "fx" ? "perc" : lane) as DrumHit["type"] },
+        });
+      });
+    },
+  );
+  return { drums };
 };
 
 const scheduleTrack = (track: Track) => {
@@ -80,11 +151,78 @@ const applySong = (song: Song, time?: number) => {
   disposeParts();
   disposeInstruments();
   engine.song = song;
+  engine.project = undefined;
+  engine.source = "song";
   const now = time ?? Tone.now();
   Tone.Transport.bpm.rampTo(song.bpm, 0.05, now);
   Tone.Transport.swing = song.swing;
   Tone.Transport.swingSubdivision = "16n";
+  Tone.Transport.loop = false;
+  Tone.Transport.loopStart = 0;
+  Tone.Transport.loopEnd = "1m";
   song.tracks.forEach(scheduleTrack);
+};
+
+const scheduleProjectTrack = (track: ProjectTrack, project: Project) => {
+  const destination = engine.masterGain ?? Tone.getDestination();
+  const instrumentTrack = projectTrackToInstrument(track);
+  const instrument = createInstrument(instrumentTrack, destination);
+  engine.instruments.push(instrument);
+
+  const hasSolo = project.tracks.some((t) => t.mixer.solo);
+  if (hasSolo && !track.mixer.solo) return;
+
+  const clips = project.clips.filter((c) => c.trackId === track.id);
+  const patternMap = Object.fromEntries(project.patterns.map((p) => [p.id, p]));
+  if (instrumentTrack.role === "melodic") {
+    const noteEvents = normalizeEvents(
+      clips.flatMap((clip) => {
+        const pattern = patternMap[clip.patternId];
+        if (!pattern || pattern.kind !== "tonal") return [];
+        return compileClipEvents(clip, pattern).notes ?? [];
+      }),
+    );
+    if (!noteEvents.length) return;
+    const part = new Tone.Part((time, value: { note: Note }) => {
+      instrument.triggerNote?.(time, value.note);
+    }, noteEvents);
+    part.loop = true;
+    part.loopEnd = `${project.lengthBars}m`;
+    part.start(0);
+    engine.parts.push(part);
+  } else {
+    const drumEvents = normalizeEvents(
+      clips.flatMap((clip) => {
+        const pattern = patternMap[clip.patternId];
+        if (!pattern || pattern.kind !== "drum") return [];
+        return compileClipEvents(clip, pattern).drums ?? [];
+      }),
+    );
+    if (!drumEvents.length) return;
+    const part = new Tone.Part((time, value: { hit: DrumHit }) => {
+      instrument.triggerDrum?.(time, value.hit);
+    }, drumEvents);
+    part.loop = true;
+    part.loopEnd = `${project.lengthBars}m`;
+    part.start(0);
+    engine.parts.push(part);
+  }
+};
+
+const applyProject = (project: Project, time?: number) => {
+  disposeParts();
+  disposeInstruments();
+  engine.project = project;
+  engine.song = undefined;
+  engine.source = "project";
+  const now = time ?? Tone.now();
+  Tone.Transport.bpm.rampTo(project.bpm, 0.05, now);
+  Tone.Transport.swing = project.swing;
+  Tone.Transport.swingSubdivision = "16n";
+  Tone.Transport.loop = project.loop.enabled;
+  Tone.Transport.loopStart = `${project.loop.startBar}m`;
+  Tone.Transport.loopEnd = `${project.loop.endBar}m`;
+  project.tracks.forEach((t) => scheduleProjectTrack(t, project));
 };
 
 export const initAudio = async () => {
@@ -109,9 +247,18 @@ export const loadSong = async (song: Song, applyAtNextBar?: boolean) => {
   }
 };
 
+export const loadProject = async (project: Project, applyAtNextBar?: boolean) => {
+  await initAudio();
+  if (applyAtNextBar && Tone.Transport.state === "started") {
+    Tone.Transport.scheduleOnce((time) => applyProject(project, time), "1m");
+  } else {
+    applyProject(project);
+  }
+};
+
 export const startTransport = async () => {
   await initAudio();
-  if (!engine.song) return;
+  if (!engine.song && !engine.project) return;
   if (engine.started) {
     Tone.Transport.start();
   } else {
@@ -148,3 +295,5 @@ export const getAnalyser = () => engine.analyser;
 export const getMediaStream = () => engine.mediaDest;
 
 export const getEngineSong = () => engine.song;
+
+export const getEngineProject = () => engine.project;
