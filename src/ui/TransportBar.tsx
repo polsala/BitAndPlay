@@ -12,10 +12,12 @@ import {
   Shuffle,
   Wand2,
 } from "lucide-react";
+import * as Tone from "tone";
 import { useAppStore } from "@/store/useAppStore";
 import { Button } from "./components/button";
 import { Slider } from "./components/slider";
 import { Switch } from "./components/switch";
+import { getAnalyser } from "@/audio/engine";
 
 interface Props {
   onToggle: () => void;
@@ -37,66 +39,89 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
   const setStopPreviewPlayback = useAppStore((state) => state.setStopPreviewPlayback);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [previewState, setPreviewState] = useState<"idle" | "loading" | "ready" | "playing">("idle");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const previewUrlRef = useRef<string | undefined>(undefined);
+  const playerRef = useRef<Tone.Player | null>(null);
+  const previewStateRef = useRef(previewState);
 
   useEffect(() => {
-    setStopPreviewPlayback(() => handleStopPreview);
+    previewUrlRef.current = previewUrl;
+  }, [previewUrl]);
+
+  useEffect(() => {
+    previewStateRef.current = previewState;
+  }, [previewState]);
+
+  useEffect(() => {
+    setStopPreviewPlayback(handleStopPreview);
     return () => {
       setStopPreviewPlayback(undefined);
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (playerRef.current) {
+        playerRef.current.stop();
+        playerRef.current.dispose();
+        playerRef.current = null;
       }
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
       }
     };
-  }, [previewUrl, setStopPreviewPlayback]);
+  }, [setStopPreviewPlayback]);
 
-  const handleRenderPreview = async () => {
+  const handleRenderPreview = async (autoPlay = false) => {
     if (previewState === "loading") return;
     setPreviewState("loading");
     try {
       if (isPlaying) {
         pauseTransport();
       }
-      if (audioRef.current && previewState === "playing") {
-        audioRef.current.pause();
+      await Tone.start();
+      if (playerRef.current) {
+        playerRef.current.stop();
+        playerRef.current.dispose();
+        playerRef.current = null;
       }
       const blob = await exportWav(48000, true);
       if (!blob) {
         setPreviewState("idle");
         return;
       }
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => setPreviewState("ready");
-      await audio.play();
-      setPreviewState("playing");
+      const player = new Tone.Player({
+        url,
+        autostart: autoPlay,
+        loop: false,
+        onload: () => setPreviewState(autoPlay ? "playing" : "ready"),
+        onstop: () => setPreviewState(previewUrlRef.current ? "ready" : "idle"),
+      });
+      const analyser = getAnalyser();
+      if (analyser) {
+        const inputNode = (analyser as unknown as { input?: AudioNode }).input ?? analyser;
+        player.connect(inputNode as unknown as AudioNode);
+      }
+      player.connect(Tone.Destination);
+      playerRef.current = player;
+      if (!autoPlay) {
+        setPreviewState("ready");
+      }
     } catch {
       setPreviewState("idle");
     }
   };
 
   const handleStopPreview = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (playerRef.current) {
+      playerRef.current.stop();
     }
     setPreviewState(previewUrl ? "ready" : "idle");
   };
 
   const handleTogglePreview = async () => {
-    const audio = audioRef.current;
-    if (!audio || !previewUrl) {
-      await handleRenderPreview();
+    const player = playerRef.current;
+    if (!player || !previewUrl) {
+      await handleRenderPreview(true);
       return;
     }
     if (isPlaying) {
@@ -106,7 +131,8 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
       handleStopPreview();
     } else {
       try {
-        await audio.play();
+        await Tone.start();
+        player.start();
         setPreviewState("playing");
       } catch {
         setPreviewState("ready");
@@ -165,7 +191,7 @@ export const TransportBar = ({ onToggle, onStop, isPlaying, bpm, swing }: Props)
             <Button
               size="sm"
               variant="ghost"
-              onClick={handleRenderPreview}
+              onClick={() => handleRenderPreview(false)}
               disabled={previewState === "loading"}
               title="Re-render HQ preview"
             >
