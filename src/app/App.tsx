@@ -59,7 +59,7 @@ export const AppShell = () => {
       <TopBar />
       <main className="flex min-h-screen flex-col pt-12">
         <div className="flex flex-1 flex-row">
-          <section className="relative flex-1">
+          <section className="relative flex-1 min-w-0">
             {ui.mode === "studio" ? (
               <StudioView />
             ) : (

@@ -309,7 +309,7 @@ export const StudioView = () => {
   );
 
   return (
-    <div className="flex h-[calc(100vh-96px)] flex-col bg-gradient-to-b from-[#0b0f18]/70 to-[#0b0f16]/60 text-foreground">
+    <div className="flex h-[calc(100vh-96px)] min-w-0 flex-col bg-gradient-to-b from-[#0b0f18]/70 to-[#0b0f16]/60 text-foreground">
       <div className="flex items-center justify-between border-b border-border/70 bg-black/50 px-4 py-2 text-sm">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-3 py-2">
@@ -402,7 +402,7 @@ export const StudioView = () => {
         </div>
       </div>
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-56 border-r border-border/70 bg-black/40">
+        <div className="w-56 shrink-0 border-r border-border/70 bg-black/40">
           {project.tracks.map((track) => (
             <div
               key={track.id}
@@ -431,7 +431,7 @@ export const StudioView = () => {
             </div>
           ))}
         </div>
-        <div className="relative flex-1 overflow-auto">
+        <div className="relative flex-1 min-w-0 overflow-x-auto overflow-y-hidden pb-3">
           <div className="relative" style={{ width: totalSteps * stepWidth }}>
             <TimelineRuler bars={project.lengthBars} stepWidth={stepWidth} />
             <div
