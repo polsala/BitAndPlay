@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
-import { Plus, Repeat2, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Pause, Play, Plus, Repeat2, Square, ZoomIn, ZoomOut } from "lucide-react";
+import * as Tone from "tone";
 import type { Clip, ProjectTrack } from "@/types/project";
 import { STEPS_PER_BAR, STEPS_PER_BEAT } from "@/types/project";
 import { useAppStore } from "@/store/useAppStore";
@@ -211,6 +212,10 @@ export const StudioView = () => {
   const moveClip = useAppStore((state) => state.moveClip);
   const resizeClip = useAppStore((state) => state.resizeClip);
   const selectClip = useAppStore((state) => state.selectClip);
+  const play = useAppStore((state) => state.play);
+  const pause = useAppStore((state) => state.pause);
+  const stop = useAppStore((state) => state.stop);
+  const playing = useAppStore((state) => state.playing);
   const toggleTrackMute = useAppStore((state) => state.toggleTrackMute);
   const toggleTrackSolo = useAppStore((state) => state.toggleTrackSolo);
   const setLoopRegion = useAppStore((state) => state.setLoopRegion);
@@ -224,6 +229,28 @@ export const StudioView = () => {
 
   const stepWidth = 14 * studio.zoom;
   const totalSteps = project.lengthBars * STEPS_PER_BAR;
+  const [playheadBars, setPlayheadBars] = useState(0);
+  const playheadX = Math.min(totalSteps * stepWidth, playheadBars * STEPS_PER_BAR * stepWidth);
+
+  useEffect(() => {
+    if (!playing) {
+      setPlayheadBars(0);
+      return;
+    }
+    let raf: number;
+    const tick = () => {
+      const pos = Tone.Transport.position.toString();
+      const [barStr = "0", beatStr = "0", sixStr = "0"] = pos.split(":");
+      const bar = Number(barStr) || 0;
+      const beat = Number(beatStr) || 0;
+      const sixteenth = Number(sixStr) || 0;
+      const bars = bar + beat / 4 + sixteenth / 16;
+      setPlayheadBars(bars);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing]);
   const selectedClip = useMemo(
     () => project.clips.find((c) => c.id === studio.selectedClipId),
     [project.clips, studio.selectedClipId],
@@ -293,6 +320,22 @@ export const StudioView = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-2 py-1">
+            <span className="text-[11px] uppercase text-muted-foreground">Studio</span>
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => (playing ? pause() : play())}
+              className="gap-1"
+            >
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {playing ? "Pause" : "Play"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => stop()} className="gap-1">
+              <Square className="h-4 w-4" />
+              Stop
+            </Button>
+          </div>
           <ZoomOut className="h-4 w-4 text-muted-foreground" />
           <Slider
             className="w-32"
@@ -336,22 +379,28 @@ export const StudioView = () => {
           ))}
         </div>
         <div className="relative flex-1 overflow-auto">
-          <TimelineRuler bars={project.lengthBars} stepWidth={stepWidth} />
-          {project.tracks.map((track) => (
-            <ClipLane
-            key={track.id}
-            track={track}
-            clips={project.clips.filter((c) => c.trackId === track.id)}
-            stepWidth={stepWidth}
-            totalSteps={totalSteps}
-            quantize={project.quantizeSteps}
-              selectedClipId={studio.selectedClipId}
-              onAddClip={addClip}
-              onSelectClip={selectClip}
-              onMoveClip={moveClip}
-              onResizeClip={resizeClip}
+          <div className="relative" style={{ width: totalSteps * stepWidth }}>
+            <TimelineRuler bars={project.lengthBars} stepWidth={stepWidth} />
+            <div
+              className="pointer-events-none absolute bottom-0 top-0 border-l-2 border-primary/80 shadow-[0_0_12px_rgba(59,130,246,0.4)]"
+              style={{ left: playheadX }}
             />
-          ))}
+            {project.tracks.map((track) => (
+              <ClipLane
+                key={track.id}
+                track={track}
+                clips={project.clips.filter((c) => c.trackId === track.id)}
+                stepWidth={stepWidth}
+                totalSteps={totalSteps}
+                quantize={project.quantizeSteps}
+                selectedClipId={studio.selectedClipId}
+                onAddClip={addClip}
+                onSelectClip={selectClip}
+                onMoveClip={moveClip}
+                onResizeClip={resizeClip}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <ClipEditorDrawer
