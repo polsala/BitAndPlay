@@ -23,12 +23,6 @@ export const GenerateTab = () => {
     setSeedInput(params.seed.toString());
   }, [params.seed]);
 
-  const applySeed = () => {
-    const seed = Number(seedInput) || Math.floor(Math.random() * 999999);
-    setSeedInput(seed.toString());
-    regenerate(seed);
-  };
-
   const reroll = () => {
     const seed = Math.floor(Math.random() * 999999);
     setSeedInput(seed.toString());
@@ -88,9 +82,6 @@ export const GenerateTab = () => {
                 onChange={(e) => setSeedInput(e.target.value)}
                 className="w-full text-sm"
               />
-              <Button variant="ghost" onClick={applySeed}>
-                Apply
-              </Button>
             </div>
           </div>
           <div>
