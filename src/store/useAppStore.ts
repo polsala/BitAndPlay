@@ -79,6 +79,8 @@ interface StoreState {
   setHeadroom: (gain: number) => void;
   setQuantize: (value: Song["quantize"]) => void;
   setProjectQuantize: (steps: number) => Promise<void>;
+  clearClips: () => Promise<void>;
+  createClipAt: (trackId: Track["id"], startStep: number, lengthSteps: number) => Promise<void>;
   addClip: (trackId: Track["id"]) => Promise<void>;
   moveClip: (id: Clip["id"], startStep: number) => Promise<void>;
   resizeClip: (id: Clip["id"], lengthSteps: number) => Promise<void>;
@@ -278,6 +280,61 @@ export const useAppStore = create<StoreState>()(
     set((state) => ({ song: { ...state.song, quantize: value } })),
   setProjectQuantize: async (steps: number) => {
     await updateProject((project) => ({ ...project, quantizeSteps: Math.max(1, steps) }));
+  },
+  clearClips: async () => {
+    await updateProject((project) => ({
+      ...project,
+      clips: [],
+    }));
+    set((state) => ({ studio: { ...state.studio, selectedClipId: undefined } }));
+  },
+  createClipAt: async (trackId: Track["id"], startStep: number, lengthSteps: number) => {
+    const track = get().project.tracks.find((t) => t.id === trackId);
+    if (!track) return;
+    const quantize = Math.max(1, get().project.quantizeSteps);
+    const snappedStart = Math.max(0, Math.floor(startStep / quantize) * quantize);
+    const snappedLength = Math.max(quantize, Math.round(lengthSteps / quantize) * quantize);
+    const totalSteps = get().project.lengthBars * STEPS_PER_BAR;
+    const boundedStart = Math.min(snappedStart, Math.max(0, totalSteps - snappedLength));
+    const patternId = createDeterministicId(`pat-${trackId}`);
+    const clipId = createDeterministicId(`clip-${trackId}`);
+    const basePattern: Pattern =
+      track.type === "NOISE" || track.type === "PCM"
+        ? {
+            id: patternId,
+            kind: "drum",
+            stepsPerBar: STEPS_PER_BAR,
+            lengthSteps: snappedLength,
+            lanes: {
+              kick: Array.from({ length: snappedLength }, () => false),
+              snare: Array.from({ length: snappedLength }, () => false),
+              hat: Array.from({ length: snappedLength }, () => false),
+              perc: Array.from({ length: snappedLength }, () => false),
+              fx: Array.from({ length: snappedLength }, () => false),
+            },
+          }
+        : {
+            id: patternId,
+            kind: "tonal",
+            stepsPerBar: STEPS_PER_BAR,
+            lengthSteps: snappedLength,
+            notes: [],
+          };
+    await updateProject((project) => ({
+      ...project,
+      patterns: [...project.patterns, basePattern],
+      clips: [
+        ...project.clips,
+        {
+          id: clipId,
+          trackId,
+          startStep: boundedStart,
+          lengthSteps: snappedLength,
+          patternId,
+        },
+      ],
+    }));
+    set((state) => ({ studio: { ...state.studio, selectedClipId: clipId } }));
   },
   addClip: async (trackId: Track["id"]) => {
     const track = get().project.tracks.find((t) => t.id === trackId);

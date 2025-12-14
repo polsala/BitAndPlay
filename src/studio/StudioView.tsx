@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, Plus, Repeat2, Square, ZoomIn, ZoomOut } from "lucide-react";
+import { Pause, Play, Plus, Repeat2, Square, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import * as Tone from "tone";
 import type { Clip, ProjectTrack } from "@/types/project";
 import { STEPS_PER_BAR, STEPS_PER_BEAT } from "@/types/project";
@@ -108,6 +108,7 @@ const ClipBlock = ({ clip, stepWidth, quantize, selected, onSelect, onMove, onRe
 
   return (
     <div
+      data-clip
       onPointerDown={startDrag}
       onClick={(e) => {
         e.stopPropagation();
@@ -143,6 +144,7 @@ interface LaneProps {
   quantize: number;
   selectedClipId?: string;
   onAddClip: (trackId: ProjectTrack["id"]) => void;
+  onCreateClip: (trackId: ProjectTrack["id"], startStep: number, lengthSteps: number) => void;
   onSelectClip: (id?: string) => void;
   onMoveClip: (id: string, start: number) => void;
   onResizeClip: (id: string, len: number) => void;
@@ -156,10 +158,13 @@ const ClipLane = ({
   quantize,
   selectedClipId,
   onAddClip,
+  onCreateClip,
   onSelectClip,
   onMoveClip,
   onResizeClip,
 }: LaneProps) => {
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [dragCurrent, setDragCurrent] = useState<number | null>(null);
   const width = totalSteps * stepWidth;
   const gridStyle = {
     backgroundImage: `
@@ -176,7 +181,35 @@ const ClipLane = ({
       <div
         className="relative h-full"
         style={{ width }}
-        onClick={() => onSelectClip(undefined)}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          if ((e.target as HTMLElement).closest("[data-clip]")) return;
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          const offset = e.clientX - rect.left;
+          const step = Math.floor(offset / stepWidth);
+          setDragStart(step);
+          setDragCurrent(step);
+          onSelectClip(undefined);
+          const onMove = (ev: PointerEvent) => {
+            const delta = ev.clientX - rect.left;
+            setDragCurrent(Math.max(0, Math.floor(delta / stepWidth)));
+          };
+          const onUp = (ev: PointerEvent) => {
+            ev.preventDefault();
+            const endOffset = ev.clientX - rect.left;
+            const endStep = Math.max(0, Math.floor(endOffset / stepWidth));
+            const start = Math.min(step, endStep);
+            const rawLen = Math.max(quantize, Math.abs(endStep - step) || quantize);
+            const snappedLen = Math.max(quantize, Math.round(rawLen / quantize) * quantize);
+            onCreateClip(track.id, start, snappedLen);
+            setDragStart(null);
+            setDragCurrent(null);
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+          };
+          window.addEventListener("pointermove", onMove);
+          window.addEventListener("pointerup", onUp);
+        }}
       >
         {clips.map((clip) => (
           <ClipBlock
@@ -190,6 +223,15 @@ const ClipLane = ({
             onResize={onResizeClip}
           />
         ))}
+        {dragStart !== null && dragCurrent !== null && (
+          <div
+            className="pointer-events-none absolute top-2 h-14 rounded-md border border-dashed border-primary/60 bg-primary/10"
+            style={{
+              left: Math.min(dragStart, dragCurrent) * stepWidth,
+              width: Math.max(quantize, Math.abs(dragCurrent - dragStart)) * stepWidth,
+            }}
+          />
+        )}
       </div>
       <button
         onClick={(e) => {
@@ -221,6 +263,7 @@ export const StudioView = () => {
   const setLoopRegion = useAppStore((state) => state.setLoopRegion);
   const setStudioZoom = useAppStore((state) => state.setStudioZoom);
   const setProjectQuantize = useAppStore((state) => state.setProjectQuantize);
+  const clearClips = useAppStore((state) => state.clearClips);
   const toggleDrumStep = useAppStore((state) => state.toggleDrumStep);
   const toggleNoteAt = useAppStore((state) => state.toggleNoteAt);
   const transposePattern = useAppStore((state) => state.transposePattern);
@@ -231,6 +274,7 @@ export const StudioView = () => {
   const totalSteps = project.lengthBars * STEPS_PER_BAR;
   const [playheadBars, setPlayheadBars] = useState(0);
   const playheadX = Math.min(totalSteps * stepWidth, playheadBars * STEPS_PER_BAR * stepWidth);
+  const createClipAt = useAppStore((state) => state.createClipAt);
 
   useEffect(() => {
     if (!playing) {
@@ -318,6 +362,15 @@ export const StudioView = () => {
               </button>
             ))}
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={() => clearClips()}
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear clips
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-2 py-1">
@@ -389,17 +442,18 @@ export const StudioView = () => {
               <ClipLane
                 key={track.id}
                 track={track}
-                clips={project.clips.filter((c) => c.trackId === track.id)}
-                stepWidth={stepWidth}
-                totalSteps={totalSteps}
-                quantize={project.quantizeSteps}
-                selectedClipId={studio.selectedClipId}
-                onAddClip={addClip}
-                onSelectClip={selectClip}
-                onMoveClip={moveClip}
-                onResizeClip={resizeClip}
-              />
-            ))}
+              clips={project.clips.filter((c) => c.trackId === track.id)}
+              stepWidth={stepWidth}
+              totalSteps={totalSteps}
+              quantize={project.quantizeSteps}
+              selectedClipId={studio.selectedClipId}
+              onAddClip={addClip}
+              onCreateClip={createClipAt}
+              onSelectClip={selectClip}
+              onMoveClip={moveClip}
+              onResizeClip={resizeClip}
+            />
+          ))}
           </div>
         </div>
       </div>
